@@ -1,0 +1,148 @@
+/* TrustLoan – Check credit score. Score, breakdown, and why (signed-in view). */
+.creditscore-page {
+    min-height: calc(100vh - 72px);
+    padding: 2rem 1.5rem 3rem;
+    background: var(--bg-soft);
+}
+
+.creditscore-container {
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.creditscore-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.creditscore-intro {
+    margin: 0 0 1.5rem;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.creditscore-card {
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06);
+    text-align: center;
+}
+
+.creditscore-number-wrap {
+    margin-bottom: 0.25rem;
+}
+
+.creditscore-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.creditscore-max {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.creditscore-label {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.creditscore-section-title {
+    margin: 0 0 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.creditscore-breakdown {
+    margin-bottom: 1.5rem;
+}
+
+.creditscore-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.creditscore-item {
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.creditscore-item:last-child {
+    margin-bottom: 0;
+}
+
+.creditscore-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.creditscore-item-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.creditscore-item-value {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.creditscore-item-reason {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.creditscore-why {
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.creditscore-why-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text);
+    line-height: 1.55;
+}
+
+/* When not signed in: form card centred */
+.creditscore-page .signin-card.creditscore-form-card {
+    margin: 0 auto;
+}
+
+.creditscore-page .creditscore-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.creditscore-page .creditscore-actions .btn {
+    min-width: 120px;
+}

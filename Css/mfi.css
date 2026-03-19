@@ -1,0 +1,59 @@
+/* TrustLoan – MFI selection page. */
+.mfi-page {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--bg-soft);
+}
+
+.mfi-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.mfi-list-label {
+    font-weight: 500;
+    margin: 1rem 0 0.5rem;
+    color: var(--text);
+}
+
+.mfi-list {
+    margin-bottom: 1rem;
+}
+
+.mfi-option {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.mfi-option:hover {
+    border-color: var(--primary);
+    background: #f8fafc;
+}
+
+.mfi-option input {
+    margin: 0;
+}
+
+.mfi-option-name {
+    font-weight: 500;
+}
+
+.mfi-option-area {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}

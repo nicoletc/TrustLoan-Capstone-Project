@@ -1,0 +1,108 @@
+/* TrustLoan – Sign-in, login, form cards. Smooth, clean. */
+.signin-page {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--bg-soft);
+}
+
+.signin-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06);
+    transition: box-shadow var(--transition, 0.2s ease), transform var(--transition, 0.2s ease);
+}
+
+.signin-card:hover {
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
+.signin-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+}
+
+.signin-desc {
+    color: var(--text-muted);
+    margin: 0 0 1.5rem;
+    font-size: 0.9375rem;
+}
+
+.form-error {
+    color: #b91c1c;
+    font-size: 0.9375rem;
+    margin: 0 0 1rem;
+    padding: 0.5rem 0.75rem;
+    background: #fef2f2;
+    border-radius: var(--radius);
+}
+
+.form-notice {
+    color: #1e40af;
+    font-size: 0.9375rem;
+    margin: 0 0 1rem;
+    padding: 0.5rem 0.75rem;
+    background: #eff6ff;
+    border-radius: var(--radius);
+}
+
+.overview-steps {
+    margin: 0 0 1.5rem;
+    padding-left: 1.25rem;
+}
+
+.overview-steps li {
+    margin-bottom: 0.5rem;
+}
+
+.user-name {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+.form-group-hidden {
+    display: none;
+}
+
+.form-group.visible {
+    display: block;
+}
+
+.signin-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* "Already a member? Log in here" – visible block below the sign-in form */
+.signin-already-member {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.signin-already-member-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+.signin-already-member .signin-login-link {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.signin-already-member .signin-login-link:hover {
+    text-decoration: underline;
+}

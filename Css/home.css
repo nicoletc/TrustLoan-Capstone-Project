@@ -1,0 +1,214 @@
+/* TrustLoan – Dashboard (home). Simple, pleasing, info spread out (not one container). */
+.home-page {
+    min-height: calc(100vh - 72px);
+    padding: 2rem 1.5rem 3rem;
+    background: var(--bg-soft);
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.home-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.home-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+}
+
+.home-subtitle {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.dashboard-section-title {
+    margin: 0 0 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dashboard-overview {
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.dashboard-card {
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: box-shadow var(--transition, 0.2s ease), transform var(--transition, 0.2s ease), border-color var(--transition, 0.2s ease);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    opacity: 0.5;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
+    transform: translateY(-2px);
+    border-color: rgba(37, 99, 235, 0.15);
+}
+
+.dashboard-card-title {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dashboard-card-value {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary);
+    min-height: 1.5em;
+}
+
+.dashboard-card-desc {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+/* Continue application – separate section, not one container */
+.home-actions {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.home-actions-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.home-action-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--primary);
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background var(--transition, 0.2s ease), border-color var(--transition, 0.2s ease), color var(--transition, 0.2s ease);
+}
+
+.home-action-link:hover {
+    background: rgba(37, 99, 235, 0.12);
+    border-color: var(--primary);
+    color: var(--primary-hover);
+    text-decoration: none;
+}
+
+/* Rejection – full page, only message and log out */
+.rejection-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 72px);
+    padding: 2rem 1.5rem;
+}
+
+.rejection-message-card {
+    text-align: center;
+    max-width: 430px;
+    padding: calc(2.5rem + 10px) calc(2rem + 10px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.rejection-title {
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+}
+
+.rejection-desc {
+    margin: 0 0 1rem;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.rejection-notes {
+    margin: 0 0 1.5rem;
+    padding: calc(1rem + 10px) calc(1rem + 10px);
+    min-height: calc(3em + 10px);
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--text-muted);
+}
+
+.rejection-notes-label {
+    margin: 0 0 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.rejection-notes-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text);
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.rejection-logout-form {
+    margin: 0;
+}
+
+.rejection-logout-form .btn {
+    min-width: 140px;
+}
+
+/* Responsive – stack cards on small screens */
+@media (max-width: 640px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-actions-links {
+        flex-direction: column;
+    }
+
+    .home-action-link {
+        text-align: center;
+    }
+}

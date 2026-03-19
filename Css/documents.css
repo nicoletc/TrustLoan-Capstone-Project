@@ -1,0 +1,85 @@
+/* TrustLoan – Documents page. Smooth, clean. Ghana Card, business details, photos. */
+.documents-page {
+    min-height: calc(100vh - 72px);
+    padding: 2rem 1.5rem;
+    background: var(--bg-soft);
+}
+
+.documents-card {
+    width: 100%;
+    max-width: 680px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 2rem 2.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06);
+    transition: box-shadow var(--transition, 0.2s ease);
+}
+
+.documents-card:hover {
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
+.doc-section {
+    margin-bottom: 2rem;
+}
+
+.doc-section:last-of-type {
+    margin-bottom: 1.5rem;
+}
+
+.doc-section h2 {
+    margin: 0 0 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.photo-upload-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.photo-upload-box {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--bg-soft);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.photo-upload-box input[type="file"] {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.ghana-card-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.ghana-card-box {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    background: var(--bg-soft);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    min-width: 0;
+}
+
+.ghana-card-box input[type="file"] {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    max-width: 100%;
+}
