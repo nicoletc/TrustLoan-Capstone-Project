@@ -53,6 +53,14 @@ if (!defined('TRUSTLOAN_MFI_NAME')) {
     define('TRUSTLOAN_MFI_NAME', 'Adenta Municipal');
 }
 
+/**
+ * ML scoring API (Option B – FastAPI in ml_service/). Empty string disables ML calls.
+ * Example: http://127.0.0.1:8000
+ */
+if (!defined('TRUSTLOAN_ML_SCORING_URL')) {
+    define('TRUSTLOAN_ML_SCORING_URL', 'http://127.0.0.1:8000');
+}
+
 function is_logged_in() {
     return isset($_SESSION['user_id']) && $_SESSION['user_id'] !== '';
 }

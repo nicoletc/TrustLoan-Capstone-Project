@@ -91,7 +91,7 @@ CREATE TABLE guarantors (
   phone VARCHAR(20) NOT NULL,
   relationship VARCHAR(40) NOT NULL,
   occupation VARCHAR(120) DEFAULT NULL COMMENT 'What the person does (e.g. Trader, Teacher)',
-  status ENUM('pending','confirmed') NOT NULL DEFAULT 'pending',
+  status ENUM('pending','confirmed','rejected') NOT NULL DEFAULT 'pending',
   confirmed_at DATETIME DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

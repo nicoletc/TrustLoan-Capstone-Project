@@ -7,17 +7,28 @@ $isLoggedIn = isset($isLoggedIn) ? $isLoggedIn : false;
 $creditScore = 0;
 $scoreLabel = 'No score';
 $scoreMax = 100;
-$breakdown = [];
 $summaryWhy = '';
+$mlUnavailable = false;
+$borrower = null;
+$calculatedAtFormatted = '';
 
 if ($isLoggedIn && !empty($_SESSION['user_id'])) {
     require_once __DIR__ . '/../Classes/CreditScore.php';
-    $data = CreditScore::getForDisplay((int) $_SESSION['user_id']);
+    $data = CreditScore::getForDisplay((int) $_SESSION['user_id'], false);
     $creditScore = (int) ($data['score'] ?? 0);
     $scoreLabel = $data['score_label'] ?? 'No score';
     $scoreMax = (int) ($data['score_max'] ?? 100);
-    $breakdown = $data['breakdown'] ?? [];
     $summaryWhy = $data['summary_why'] ?? '';
+    $mlUnavailable = !empty($data['ml_service_unreachable']);
+    if (!empty($data['borrower']) && is_array($data['borrower'])) {
+        $borrower = $data['borrower'];
+    }
+    if (!empty($data['calculated_at'])) {
+        $t = strtotime($data['calculated_at']);
+        if ($t) {
+            $calculatedAtFormatted = date('j M Y, H:i', $t);
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -40,7 +51,7 @@ if ($isLoggedIn && !empty($_SESSION['user_id'])) {
         <?php if ($isLoggedIn): ?>
             <div class="creditscore-container">
                 <h1 class="creditscore-title">Your credit score</h1>
-                <p class="creditscore-intro">MFIs on TrustLoan use this to see how well you repay. Below is your score, a breakdown, and why it is this way.</p>
+                <p class="creditscore-intro">MFIs on TrustLoan use this score when reviewing your application.</p>
 
                 <section class="creditscore-card" aria-label="Score summary">
                     <div class="creditscore-number-wrap">
@@ -50,25 +61,40 @@ if ($isLoggedIn && !empty($_SESSION['user_id'])) {
                     <p class="creditscore-label"><?php echo htmlspecialchars($scoreLabel); ?></p>
                 </section>
 
-                <section class="creditscore-breakdown" aria-label="Score breakdown">
-                    <h2 class="creditscore-section-title">Breakdown</h2>
-                    <ul class="creditscore-list">
-                        <?php foreach ($breakdown as $item): ?>
-                        <li class="creditscore-item">
-                            <div class="creditscore-item-header">
-                                <span class="creditscore-item-label"><?php echo htmlspecialchars($item['label']); ?></span>
-                                <span class="creditscore-item-value"><?php echo htmlspecialchars($item['value']); ?></span>
-                            </div>
-                            <p class="creditscore-item-reason"><?php echo htmlspecialchars($item['reason']); ?></p>
-                        </li>
+                <?php if ($borrower !== null): ?>
+                <section class="creditscore-insights" aria-label="Risk summary">
+                    <h2 class="creditscore-section-title">What this means for you</h2>
+                    <p class="creditscore-risk-tier">
+                        <span class="creditscore-risk-label">Estimated risk level</span>
+                        <span class="creditscore-risk-badge creditscore-risk-<?php echo htmlspecialchars($borrower['risk_tier'] ?? 'moderate'); ?>"><?php echo htmlspecialchars($borrower['risk_tier_label'] ?? ''); ?></span>
+                    </p>
+                    <p class="creditscore-risk-blurb"><?php echo htmlspecialchars($borrower['risk_blurb'] ?? ''); ?></p>
+                    <?php if (!empty($borrower['is_approximate'])): ?>
+                    <p class="creditscore-approx-note">Estimated from your saved TrustLoan score<?php echo $mlUnavailable ? ' — we could not reach the scoring service just now.' : '.'; ?> Check back later for a fresh assessment.</p>
+                    <?php endif; ?>
+                    <?php if (!empty($borrower['tips']) && is_array($borrower['tips'])): ?>
+                    <h3 class="creditscore-tips-title">Ways to strengthen your profile</h3>
+                    <ul class="creditscore-tips-list">
+                        <?php foreach ($borrower['tips'] as $tip): ?>
+                        <li><?php echo htmlspecialchars((string) $tip); ?></li>
                         <?php endforeach; ?>
                     </ul>
+                    <?php endif; ?>
+                    <?php if ($calculatedAtFormatted !== ''): ?>
+                    <p class="creditscore-updated">Score last updated: <?php echo htmlspecialchars($calculatedAtFormatted); ?></p>
+                    <?php endif; ?>
                 </section>
+                <?php endif; ?>
 
-                <section class="creditscore-why" aria-label="Why your score is this way">
-                    <h2 class="creditscore-section-title">Why your score is this way</h2>
+                <?php if ($summaryWhy !== ''): ?>
+                <section class="creditscore-why" aria-label="About your score">
                     <p class="creditscore-why-text"><?php echo htmlspecialchars($summaryWhy); ?></p>
                 </section>
+                <?php endif; ?>
+
+                <?php if ($mlUnavailable): ?>
+                <p class="creditscore-why-text creditscore-ml-hint" role="status">We could not reach the scoring service just now. If your score shows &ldquo;No score&rdquo; or looks out of date, try again after a moment.</p>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <div class="signin-card creditscore-form-card">

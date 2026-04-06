@@ -1,0 +1,11 @@
+.DS_Store
+**/.DS_Store
+
+# Python (ml_service)
+ml_service/.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# New per-application upload folders (keep tracked files as-is; do not commit new IDs)
+uploads/applications/*/

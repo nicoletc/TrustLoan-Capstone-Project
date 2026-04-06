@@ -56,19 +56,18 @@ class Group {
         return $group;
     }
 
+    /**
+     * Add borrower to group. Uses INSERT IGNORE so duplicates are OK — same person may already
+     * be in the group from an earlier loan while this is the first approval of a new application.
+     */
     public static function addMember($groupId, $userId) {
         $gid = (int) $groupId;
         $uid = (int) $userId;
         if ($gid <= 0 || $uid <= 0) return false;
         $pdo = DB::getConnection();
-        try {
-            $stmt = $pdo->prepare('INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)');
-            $stmt->execute([$gid, $uid, 'member']);
-            return true;
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) return false; // duplicate
-            throw $e;
-        }
+        $stmt = $pdo->prepare('INSERT IGNORE INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)');
+        $stmt->execute([$gid, $uid, 'member']);
+        return true;
     }
 
     public static function setHead($groupId, $userId) {

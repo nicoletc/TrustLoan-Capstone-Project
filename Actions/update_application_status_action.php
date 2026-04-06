@@ -34,5 +34,8 @@ if (!$ok) {
 if ($status === 'rejected' && $notes !== '') {
     Application::updateNotes($id, $notes);
 }
+if ($status === 'rejected') {
+    Application::rejectGuarantorForApplication($id);
+}
 AuditLog::add(get_admin_user_id(), $status === 'rejected' ? 'Rejected application' : 'Marked application in progress', 'application', $id);
 echo json_encode(['ok' => true]);

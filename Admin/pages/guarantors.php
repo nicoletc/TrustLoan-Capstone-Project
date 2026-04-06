@@ -38,9 +38,15 @@ $baseUrl = isset($baseUrl) ? $baseUrl : '';
             tbody.innerHTML = '<tr><td colspan="6" class="admin-table-empty">No guarantors yet.</td></tr>';
             return;
         }
+        function guarantorStatusBadge(status) {
+            var s = (status || 'pending').toString().toLowerCase();
+            var label = s === 'confirmed' ? 'Confirmed' : s === 'rejected' ? 'Rejected' : 'Pending';
+            var cls = s === 'confirmed' ? 'status-approved' : s === 'rejected' ? 'status-rejected' : 'status-new';
+            return '<span class="applicant-status-badge ' + cls + '">' + label + '</span>';
+        }
         rows.forEach(function(r) {
             var tr = document.createElement('tr');
-            tr.innerHTML = '<td>' + (r.applicant_name || '—') + '</td><td>' + (r.full_name || '—') + '</td><td>' + (r.phone || '—') + '</td><td>' + (r.relationship || '—') + '</td><td>' + (r.occupation || '—') + '</td><td>' + (r.status || 'pending') + '</td>';
+            tr.innerHTML = '<td>' + (r.applicant_name || '—') + '</td><td>' + (r.full_name || '—') + '</td><td>' + (r.phone || '—') + '</td><td>' + (r.relationship || '—') + '</td><td>' + (r.occupation || '—') + '</td><td>' + guarantorStatusBadge(r.status) + '</td>';
             tbody.appendChild(tr);
         });
     });

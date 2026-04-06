@@ -7,7 +7,7 @@ $adminPage = 'dashboard';
     <div class="admin-stats">
         <div class="admin-stat-card">
             <span class="admin-stat-value" id="statVerifications">0</span>
-            <span class="admin-stat-label">Pending verifications</span>
+            <span class="admin-stat-label">Needs review (new &amp; in progress)</span>
         </div>
         <div class="admin-stat-card">
             <span class="admin-stat-value" id="statApplicants">0</span>
@@ -56,7 +56,18 @@ $adminPage = 'dashboard';
                     labels: labels.length ? labels : ['Jan','Feb','Mar','Apr','May','Jun'],
                     datasets: [{ label: 'Applications', data: values.length ? values : [0,0,0,0,0,0], borderColor: 'rgb(37, 99, 235)', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.3 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            // Counts are whole applications — avoid 0.2, 0.4… ticks from auto scale
+                            ticks: { stepSize: 1, precision: 0 }
+                        }
+                    }
+                }
             });
         }
         var breakdown = d.status_breakdown || [];

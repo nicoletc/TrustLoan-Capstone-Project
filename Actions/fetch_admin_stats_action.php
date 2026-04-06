@@ -13,7 +13,7 @@ if (!is_admin_logged_in()) {
 }
 
 $pdo = DB::getConnection();
-$verifications = (int) $pdo->query("SELECT COUNT(*) FROM applications WHERE status = 'new'")->fetchColumn();
+$verifications = (int) $pdo->query("SELECT COUNT(*) FROM applications WHERE status IN ('new','in_progress')")->fetchColumn();
 $applicants = (int) $pdo->query('SELECT COUNT(*) FROM applications')->fetchColumn();
 $activeLoans = (int) $pdo->query("SELECT COUNT(*) FROM loans WHERE status IN ('active','overdue')")->fetchColumn();
 $statusBreakdown = $pdo->query("SELECT status, COUNT(*) AS cnt FROM applications GROUP BY status")->fetchAll(PDO::FETCH_ASSOC);
