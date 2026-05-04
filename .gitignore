@@ -1,13 +1,36 @@
 .DS_Store
 **/.DS_Store
 
+# OS / IDE
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Logs and local env (never ship secrets)
+*.log
+.env
+.env.*
+
+# Cursor / IDE (local workflow; optional to keep tracked)
+.cursor/
+
 # Python (ml_service)
 ml_service/.venv/
 **/__pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
 
-# User uploads — not committed (borrower IDs, cards, photos). Repo keeps .gitkeep only.
+# Jupyter / tooling
+.ipynb_checkpoints/
+
+# User uploads — not committed (borrower-facing files).
+# Repo keeps .gitkeep only under uploads/.
 /uploads/*
 !/uploads/.gitkeep
 !/uploads/applications/
