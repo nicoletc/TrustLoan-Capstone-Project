@@ -181,13 +181,15 @@
     border-color: rgba(234, 179, 8, 0.4);
 }
 
-.creditscore-risk-elevated {
+/* PD ~28–45% band */
+.creditscore-risk-high {
     background: rgba(249, 115, 22, 0.14);
     color: #c2410c;
     border-color: rgba(249, 115, 22, 0.35);
 }
 
-.creditscore-risk-high {
+/* PD ≥45% band */
+.creditscore-risk-very_high {
     background: rgba(220, 38, 38, 0.12);
     color: #b91c1c;
     border-color: rgba(220, 38, 38, 0.35);

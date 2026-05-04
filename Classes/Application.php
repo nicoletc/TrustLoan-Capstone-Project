@@ -1,7 +1,5 @@
 <?php
-/**
- * TrustLoan – Application (loan application) business logic. No HTML, no HTTP.
- */
+/** Application domain logic; no HTML/HTTP. */
 if (!defined('TRUSTLOAN_APPLICATION_LOADED')) {
     define('TRUSTLOAN_APPLICATION_LOADED', true);
 }
@@ -61,7 +59,7 @@ class Application {
         return true;
     }
 
-    /** Set guarantor status to confirmed (and confirmed_at) for an application. Used when application is approved. */
+    /** On approve: mark guarantor confirmed. */
     public static function confirmGuarantorForApplication($applicationId) {
         $id = (int) $applicationId;
         if ($id <= 0) return false;
@@ -71,7 +69,7 @@ class Application {
         return true;
     }
 
-    /** Set guarantor status to rejected when the application is rejected (admin). */
+    /** On reject: mark guarantor rejected. */
     public static function rejectGuarantorForApplication($applicationId) {
         $id = (int) $applicationId;
         if ($id <= 0) return false;
@@ -94,7 +92,7 @@ class Application {
         return true;
     }
 
-    /** Check if application has a guarantor record (step submitted). */
+    /** Guarantor step completed. */
     public static function hasGuarantor($applicationId) {
         $id = (int) $applicationId;
         if ($id <= 0) return false;
@@ -104,7 +102,7 @@ class Application {
         return (bool) $stmt->fetch();
     }
 
-    /** Check if application has an MFI selected (step submitted). */
+    /** MFI step completed. */
     public static function hasMfi($applicationId) {
         $id = (int) $applicationId;
         if ($id <= 0) return false;
@@ -295,35 +293,30 @@ class Application {
         }
     }
 
-    /**
-     * Approximate count of “labeled” applications for ML routing (approved + rejected).
-     */
+    /** Approved + rejected count (ML n_labeled heuristic). */
     public static function countLabeledApplicationsApprox() {
         $pdo = DB::getConnection();
         $stmt = $pdo->query("SELECT COUNT(*) FROM applications WHERE status IN ('approved','rejected')");
         return (int) $stmt->fetchColumn();
     }
 
-    /**
-     * Build feature dict for ML /score API from latest application + user (Option B router).
-     * Names should match feature_columns.json from your training export; unknown fields use neutral defaults.
-     */
+    /** Feature row for POST /score (keys must match ml_service/exports/feature_columns.json). */
     public static function buildMlFeaturesForBorrower($userId) {
         $userId = (int) $userId;
         $user = User::getById($userId);
         $app = $userId > 0 ? self::getLatestByUser($userId) : null;
+
         $amount = $app ? max(0.0, (float) ($app['requested_amount'] ?? 0)) : 0.0;
         $weeks = $app ? max(1, (int) ($app['repayment_weeks'] ?? 12)) : 12;
         $businessType = $app ? strtolower(trim((string) ($app['business_type'] ?? ''))) : '';
-        if ($businessType === '') {
-            $businessType = 'informal';
-        }
+        if ($businessType === '') $businessType = 'informal';
+
         $location = $app ? strtolower(trim((string) ($app['business_location'] ?? ''))) : '';
         $region = 'greater_accra';
         if ($location !== '') {
             $region = preg_replace('/\s+/', '_', substr($location, 0, 40));
         }
-        $mfiArea = '';
+
         if ($app) {
             $pdo = DB::getConnection();
             $stmt = $pdo->prepare('SELECT m.area_slug FROM application_mfi am JOIN mfis m ON m.id = am.mfi_id WHERE am.application_id = ? LIMIT 1');
@@ -333,6 +326,7 @@ class Application {
                 $region = (string) $row['area_slug'];
             }
         }
+
         $accountMonths = 0.0;
         if ($user && !empty($user['created_at'])) {
             $t = strtotime($user['created_at']);
@@ -340,20 +334,60 @@ class Application {
                 $accountMonths = max(0.0, (time() - $t) / (30.44 * 86400));
             }
         }
+
         return [
-            'income_log' => 0.0,
-            'expense_ratio' => 0.0,
-            'missed_payments' => 0.0,
-            'loan_amount_log' => $amount > 0 ? log(1.0 + $amount) : 0.0,
-            'age' => 0.0,
-            'savings_ratio' => 0.0,
-            'tenure_months' => round($accountMonths, 4),
-            'merchant_risk_score' => 0.0,
-            'phone_stability' => $user && strlen((string) ($user['phone'] ?? '')) >= 10 ? 1.0 : 0.5,
-            'network_density' => min(1.0, $weeks / 52.0),
-            'gender' => 'unknown',
+            'requested_loan_amount' => $amount,
+            'loan_term_months' => (float) $weeks,
+            'repayment_frequency' => 'weekly',
             'employment_type' => $businessType,
             'region' => $region,
+            'loan_purpose' => 'working_capital',
+            'gender' => 'unknown',
+            'urban_rural' => 'urban',
+            'bank_account_age_years' => round($accountMonths / 12, 4),
+            'has_mobile_money' => $user && strlen((string)($user['phone'] ?? '')) >= 10 ? 1.0 : 0.0,
+            'age' => 0.0,
+            'marital_status' => 'unknown',
+            'dependents_count' => 0.0,
+            'education_level' => 'unknown',
+            'years_at_residence' => 0.0,
+            'years_in_business' => 0.0,
+            'business_registration' => 0.0,
+            'business_type' => $businessType,
+            'monthly_income_est' => 0.0,
+            'income_variability' => 'unknown',
+            'seasonal_income' => 0.0,
+            'household_expenses_est' => 0.0,
+            'savings_est' => 0.0,
+            'has_bank_account' => 0.0,
+            'momo_txn_count_monthly' => 0.0,
+            'momo_inflow_monthly' => 0.0,
+            'momo_outflow_monthly' => 0.0,
+            'momo_balance_proxy' => 0.0,
+            'cash_flow_gap' => 0.0,
+            'num_open_credit_facilities' => 0.0,
+            'total_outstanding_balance' => 0.0,
+            'total_scheduled_installment' => 0.0,
+            'total_overdue_amount' => 0.0,
+            'num_facilities_with_overdue' => 0.0,
+            'max_days_past_due' => 0.0,
+            'num_facilities_90dpd' => 0.0,
+            'num_closed_facilities_last_6m' => 0.0,
+            'total_written_off_amount' => 0.0,
+            'has_collateral' => 0.0,
+            'exposure_as_guarantor' => 0.0,
+            'credit_inquiries_last_6m' => 0.0,
+            'disputes_last_6m' => 0.0,
+            'interest_rate_monthly' => 0.0,
+            'group_lending_member' => 0.0,
+            'group_size' => 0.0,
+            'on_time_payment_ratio' => 0.0,
+            'recent_missed_payment_flag' => 0.0,
+            'max_consecutive_missed_payments' => 0.0,
+            'payment_volatility_index' => 0.0,
+            'debt_service_ratio' => 0.0,
+            'leverage_ratio' => 0.0,
+            'num_dependents' => 0.0,
         ];
     }
 }

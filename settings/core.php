@@ -1,7 +1,5 @@
 <?php
-/**
- * TrustLoan – Core bootstrap: session and auth checks.
- */
+/** Session, timeouts, constants, tiny auth helpers. */
 if (!defined('TRUSTLOAN_CORE_LOADED')) {
     define('TRUSTLOAN_CORE_LOADED', true);
 }
@@ -53,10 +51,7 @@ if (!defined('TRUSTLOAN_MFI_NAME')) {
     define('TRUSTLOAN_MFI_NAME', 'Adenta Municipal');
 }
 
-/**
- * ML scoring API (Option B – FastAPI in ml_service/). Empty string disables ML calls.
- * Example: http://127.0.0.1:8000
- */
+/** ml_service FastAPI base URL; empty disables ML HTTP. */
 if (!defined('TRUSTLOAN_ML_SCORING_URL')) {
     define('TRUSTLOAN_ML_SCORING_URL', 'http://127.0.0.1:8000');
 }

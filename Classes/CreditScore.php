@@ -1,7 +1,5 @@
 <?php
-/**
- * TrustLoan – Credit score from ML service only (Option B). Persists 0–100 in credit_scores.
- */
+/** ML Option B: PD → 0–100 stored in credit_scores; labels/tips from score bands; optional $forAdmin blurbs. */
 if (!defined('TRUSTLOAN_CREDIT_SCORE_LOADED')) {
     define('TRUSTLOAN_CREDIT_SCORE_LOADED', true);
 }
@@ -35,11 +33,7 @@ class CreditScore {
         return true;
     }
 
-    /**
-     * Map probability of default (0–1) to display score 0–100 (lower PD → higher score).
-     *
-     * @return array{0: int, 1: string} [score, label]
-     */
+    /** PD → clamped 0–100 score and band label. */
     public static function pdToScoreAndLabel($pd) {
         $pd = (float) $pd;
         $pd = max(0.0, min(1.0, $pd));
@@ -48,46 +42,55 @@ class CreditScore {
         return [$score, self::labelForScore($score)];
     }
 
+    /** Bands: 85+ Excellent, 70+ Good, 55+ Fair, else Poor. */
     public static function labelForScore($score) {
         $score = max(0, min(100, (int) $score));
-        return $score >= 85 ? 'Excellent' : ($score >= 70 ? 'Good' : ($score >= 50 ? 'Fair' : 'Poor'));
+        if ($score >= 85) {
+            return 'Excellent';
+        }
+        if ($score >= 70) {
+            return 'Good';
+        }
+        if ($score >= 55) {
+            return 'Fair';
+        }
+        return 'Poor';
     }
 
-    /**
-     * User-safe context derived from PD (0–1). No model names or routing.
-     *
-     * @return array{risk_tier: string, risk_tier_label: string, risk_blurb: string, tips: list<string>, is_approximate: bool}
-     */
-    public static function borrowerContextFromPd($pd, $isApproximate = false) {
-        $pd = max(0.0, min(1.0, (float) $pd));
-        $pct = $pd * 100;
-        if ($pct <= 0.05) {
-            $pctPhrase = 'under 0.1%';
-        } elseif ($pct < 10) {
-            $pctPhrase = sprintf('about %.1f%%', $pct);
-        } else {
-            $pctPhrase = sprintf('about %.0f%%', $pct);
+    /** Same bands as labelForScore; returns tier slug, risk phrase, word label. */
+    private static function scoreBandMeta($score) {
+        $score = max(0, min(100, (int) $score));
+        if ($score >= 85) {
+            return ['risk_tier' => 'low', 'risk_tier_label' => 'Low risk', 'score_label' => 'Excellent'];
         }
-
-        if ($pd < 0.12) {
-            $tier = 'low';
-            $tierLabel = 'Low';
-        } elseif ($pd < 0.28) {
-            $tier = 'moderate';
-            $tierLabel = 'Moderate';
-        } elseif ($pd < 0.45) {
-            $tier = 'elevated';
-            $tierLabel = 'Elevated';
-        } else {
-            $tier = 'high';
-            $tierLabel = 'Higher';
+        if ($score >= 70) {
+            return ['risk_tier' => 'moderate', 'risk_tier_label' => 'Moderate risk', 'score_label' => 'Good'];
         }
+        if ($score >= 55) {
+            return ['risk_tier' => 'high', 'risk_tier_label' => 'High risk', 'score_label' => 'Fair'];
+        }
+        return ['risk_tier' => 'very_high', 'risk_tier_label' => 'Very high risk', 'score_label' => 'Poor'];
+    }
 
-        $prefix = $isApproximate
-            ? 'From your last saved score, we estimate '
-            : 'Based on your latest assessment, relative default risk is roughly ';
-        $suffix = ' compared with similar application profiles (lower is better). MFIs still make the final decision.';
-        $riskBlurb = $prefix . $pctPhrase . $suffix;
+    /** Borrower context from score only; $forAdmin switches blurb style. */
+    public static function borrowerContextFromScore($score, $isApproximate = false, $forAdmin = false) {
+        $score = max(0, min(100, (int) $score));
+        $meta = self::scoreBandMeta($score);
+        $tier = $meta['risk_tier'];
+        $tierLabel = $meta['risk_tier_label'];
+        $word = $meta['score_label'];
+
+        if ($forAdmin) {
+            $base = 'TrustLoan score ' . $score . '/100 (' . $word . '). Estimated risk: ' . $tierLabel . '. MFIs still make the final decision.';
+            $riskBlurb = $isApproximate ? ('From last saved score. ' . $base) : $base;
+        } else {
+            $core = 'Your score of ' . $score . '/100 (' . $word . ') and estimated risk level (' . $tierLabel . ') both come from TrustLoan\'s automated assessment of your application. MFIs still make the final decision.';
+            if ($isApproximate) {
+                $riskBlurb = 'We\'re showing your last saved result from our automated system. ' . $core;
+            } else {
+                $riskBlurb = $core;
+            }
+        }
 
         return [
             'risk_tier' => $tier,
@@ -95,6 +98,7 @@ class CreditScore {
             'risk_blurb' => $riskBlurb,
             'tips' => self::borrowerTipsForTier($tier),
             'is_approximate' => (bool) $isApproximate,
+            'score_label' => $word,
         ];
     }
 
@@ -113,10 +117,16 @@ class CreditScore {
                         'Requesting an amount that fits your income may improve how your file is viewed.',
                         $common,
                     ];
-            case 'elevated':
+            case 'high':
                 return [
                         'Double-check loan amount and repayment period — a smaller, shorter loan can be easier to approve.',
                         'Add any documents MFIs ask for promptly; missing items often delay decisions.',
+                        $common,
+                    ];
+            case 'very_high':
+                return [
+                        'Consider adjusting the requested amount or term if an MFI suggests it.',
+                        'Speak with your group or loan officer if something on your profile is outdated.',
                         $common,
                     ];
             default:
@@ -128,17 +138,10 @@ class CreditScore {
         }
     }
 
-    /**
-     * @param float|null $exactPd PD from ML when freshly scored; null → derive from stored score (approximate)
-     */
-    private static function attachCalculatedAtAndBorrower(array &$out, $userId, $exactPd) {
+    /** Sets calculated_at and borrower[]; empty if no score yet. */
+    private static function applyAudiencePolicy(array &$out, $userId, $forAdmin, $insightsApproximate) {
         $uid = (int) $userId;
-        if ($uid <= 0) {
-            $out['calculated_at'] = null;
-            $out['borrower'] = null;
-            return;
-        }
-        $row = self::getByUserId($uid);
+        $row = $uid > 0 ? self::getByUserId($uid) : null;
         $out['calculated_at'] = ($row && !empty($row['calculated_at'])) ? (string) $row['calculated_at'] : null;
 
         if (($out['score_label'] ?? '') === 'No score' && (int) ($out['score'] ?? 0) === 0) {
@@ -146,35 +149,23 @@ class CreditScore {
             return;
         }
 
-        if ($exactPd !== null && is_numeric($exactPd)) {
-            $out['borrower'] = self::borrowerContextFromPd((float) $exactPd, false);
-            return;
-        }
-        $s = (int) ($out['score'] ?? 0);
-        $approxPd = max(0.0, min(1.0, 1.0 - ($s / 100.0)));
-        $out['borrower'] = self::borrowerContextFromPd($approxPd, true);
+        $out['borrower'] = self::borrowerContextFromScore((int) ($out['score'] ?? 0), $insightsApproximate, $forAdmin);
     }
 
-    /**
-     * Score + display fields for the borrower UI (no breakdown). Optionally include raw ML payload for admin.
-     *
-     * @param bool $includeMlPayload When true, adds 'ml' key with API response or null
-     * @return array{score: int, score_label: string, score_max: int, breakdown: array, summary_why: string, ml?: ?array}
-     */
-    public static function getForDisplay($userId, $includeMlPayload = false) {
+    /** For UI: score, label, summary, borrower insights; $includeMlPayload adds raw ml array for admin. */
+    public static function getForDisplay($userId, $includeMlPayload = false, $forAdmin = false) {
         $id = (int) $userId;
         if ($id <= 0) {
             $out = self::defaultDisplay($includeMlPayload);
             $out['ml_service_unreachable'] = false;
-            $out['calculated_at'] = null;
-            $out['borrower'] = null;
+            self::applyAudiencePolicy($out, $id, $forAdmin, false);
             return $out;
         }
 
         if (!defined('TRUSTLOAN_ML_SCORING_URL') || TRUSTLOAN_ML_SCORING_URL === '') {
             $out = self::fromStoredOnly($id, $includeMlPayload);
             $out['ml_service_unreachable'] = false;
-            self::attachCalculatedAtAndBorrower($out, $id, null);
+            self::applyAudiencePolicy($out, $id, $forAdmin, true);
             return $out;
         }
 
@@ -195,8 +186,7 @@ class CreditScore {
             if ($includeMlPayload) {
                 $out['ml'] = $ml;
             }
-            $exactPd = (isset($ml['pd']) && is_numeric($ml['pd'])) ? (float) $ml['pd'] : null;
-            self::attachCalculatedAtAndBorrower($out, $id, $exactPd);
+            self::applyAudiencePolicy($out, $id, $forAdmin, false);
             return $out;
         }
 
@@ -214,13 +204,13 @@ class CreditScore {
             if ($includeMlPayload) {
                 $out['ml'] = null;
             }
-            self::attachCalculatedAtAndBorrower($out, $id, null);
+            self::applyAudiencePolicy($out, $id, $forAdmin, true);
             return $out;
         }
 
         $out = self::defaultDisplay($includeMlPayload);
         $out['ml_service_unreachable'] = true;
-        self::attachCalculatedAtAndBorrower($out, $id, null);
+        self::applyAudiencePolicy($out, $id, $forAdmin, true);
         return $out;
     }
 

@@ -1,63 +1,71 @@
-# TrustLoan – MVC Architecture & Tech Stack
+# TrustLoan – MVC architecture & tech stack
 
-This project is a **microfinance credit assessment application** for Ghana's informal sector. It uses **strict MVC architecture** and a single, consistent tech stack.
-
----
-
-## 0. TECH STACK (USE THIS ONLY – STAY CONSISTENT)
-
-| Layer | Technology | Do NOT use |
-|-------|------------|------------|
-| **Backend** | **PHP** (plain PHP, no framework) | Laravel, Symfony, Slim, etc. |
-| **Database** | MySQL/MariaDB via PDO | Raw mysqli, ORMs |
-| **Frontend markup** | **HTML** (from PHP Views) | Blade, Twig, JSX |
-| **Frontend styles** | **Plain CSS** | Sass, Tailwind, CSS-in-JS |
-| **Frontend behaviour** | **Vanilla JavaScript** | React, Vue, Angular, jQuery |
-| **Libraries (JS)** | CDN only: intl-tel-input, SweetAlert2 | npm bundles unless we add a build |
-| **PHP dependencies** | None (no Composer) | Composer packages unless we introduce it |
-
-- **One backend language:** PHP only.
-- **One frontend script approach:** Vanilla JS only; no JS frameworks.
-- **Password:** Validation and SHA-256 hashing in `js/password.js`; server stores bcrypt(hash).
+Microfinance credit assessment for Ghana’s informal sector: **borrower MVC** (`index.php` + `View/`) plus a separate **Admin** area (`Admin/`) sharing the same `Classes/` and PDO layer. Same stack rules apply to new PHP UI code.
 
 ---
 
-## 1. FOLDER RESPONSIBILITIES
+## 0. Tech stack
 
-| Folder | Purpose |
-|--------|---------|
-| **index.php** | Entry point. Route POST actions first, then load View by `page`. |
-| **settings/** | core.php (session, is_logged_in, TRUSTLOAN_DEV_MODE), db_cred.php, db_class.php, trustloan.sql |
-| **Classes/** | User, VerificationCode, Application. Business logic and data; no HTML, no HTTP. |
-| **Controllers/** | AuthController, ApplicationController. Request handling and redirects only. |
-| **Actions/** | One file per action (send_verification_code, verify_code, register_customer_action, login_customer_action, submit_documents, etc.). Call Controller; no business logic. |
-| **View/** | One PHP file per page (landing, signin, login, documents, loan-amount, guarantor, mfi, waiting, home, etc.). Presentation only. |
-| **Css/** | base.css, signin.css, landing.css, mfi.css, admin.css. |
-| **js/** | main.js, signin.js, password.js. Validation and hashing in js folder. |
-| **Admin/** | Admin layout and pages (dashboard, verifications, applicants, loans, groups, guarantors, settings). |
-| **Images/** | Static assets. |
+| Layer | In this project |
+| --- | --- |
+| **Web application** | Plain **PHP** (no framework), borrower entry `index.php`, admin under `Admin/` |
+| **Database** | **MySQL/MariaDB** via **PDO** in `settings/db_class.php` |
+| **Markup** | **HTML** emitted from PHP views (`View/`, `Admin/pages/`) |
+| **Styles** | **Plain CSS** in `Css/` (e.g. `base`, `signin`, `landing`, `documents`, `creditscore`, `admin`, …) |
+| **Client scripts** | **Vanilla JavaScript** in `js/` (e.g. `main.js`, `signin.js`, `password.js`, `admin.js`) |
+| **Front-end libraries (CDN)** | **intl-tel-input** (phone), **SweetAlert2** (dialogs) where those pages load them |
+| **PHP dependencies** | None — no Composer for the web app |
+| **Credit scoring service (optional)** | **`ml_service/`**: **Python**, **FastAPI**; PHP calls it over HTTP when `TRUSTLOAN_ML_SCORING_URL` is set in `settings/core.php` ([ARCHITECTURE.md](ARCHITECTURE.md)) |
 
----
-
-## 2. CORE RULES
-
-- **Controllers:** Handle requests and coordination only. Call Classes. No SQL, no HTML.
-- **Classes (Models):** All business logic and data access. No HTML, no HTTP.
-- **Views:** Presentation only. No SQL, no financial calculations.
-- **Actions:** Receive request → call Controller → redirect or return. No business logic.
-- **No SQL in Views. No HTML in Controllers.**
+**Passwords (borrower `users` table):** The browser uses `js/password.js` for **length / match validation** only. **`register_customer_action`** → `User::create()` receives the **plain** password over HTTPS-in-production and stores **`password_hash(..., PASSWORD_DEFAULT)`**. **`login_customer_action`** and name-based flows use **`User::verifyPassword()`** (`password_verify`). A **legacy** path can still verify very old hashes derived from SHA-256 in PHP—do **not** send only a client SHA-256 as the shipped login path today.
 
 ---
 
-## 3. AUTH FLOW
+## 1. Folder responsibilities
 
-1. **Sign in:** Phone → send code (stored in DB; dev mode shows code in session on sign-in page) → verify code → redirect to **login**.
-2. **New user:** Full name + password (validated and hashed in js/password.js) → register → redirect to **documents**.
-3. **Existing user:** Password (hashed in JS) → login → redirect to **home**.
-4. **Protected pages:** documents, loan-amount, guarantor, mfi, waiting, home require `is_logged_in()`; else redirect to signin.
+| Location | Responsibility |
+| --- | --- |
+| **`index.php`** | Borrower entry: POST `action` → `Actions/{action}.php`, then GET `page` → `View/{page}.php`; protected-route guard; multipart size guard |
+| **`settings/`** | `core.php` (session, timeouts, constants e.g. `TRUSTLOAN_DEV_MODE`, `TRUSTLOAN_ML_SCORING_URL`), `db_class.php`, credentials, **`trustloan.sql`**, **`migrations/`** |
+| **`Classes/`** | Domain + data access only (e.g. `User`, `Application`, `Loan`, `Group`, `CreditScore`, `VerificationCode`, `AdminUser`, `AuditLog`, `MlScoringClient`, …). No HTML, no `header()` redirects |
+| **`Controllers/`** | **`AuthController`**, **`ApplicationController`** — borrower flows: parse intent, call Classes, redirect. No SQL here, no HTML output |
+| **`Actions/`** | One file per `action` value. **Borrower** actions typically delegate to controllers; **admin JSON** actions often include `core.php`, gate with `is_admin_logged_in()`, call `Classes/*` directly, then `echo` JSON |
+| **`View/`** | Borrower pages + `partials/` (e.g. header). **`view_application_image.php`** serves uploads for `?page=view_application_image`. Presentation only |
+| **`Css/`** | Shared and page CSS: `base`, `landing`, `signin`, `overview`, `documents`, `loan-amount`/flows via `home`, `mfi`, `waiting`, `creditscore`, `settings`, **`admin`** (for borrower-facing admin-named styles where used), … |
+| **`js/`** | `main.js`, `signin.js`, `password.js`, **`admin.js`**, … — validation and light UI only |
+| **`Admin/`** | `Admin/index.php` router, `layout.php`, `login.php`, `pages/*.php` — staff UI |
+| **`api/`** | Small JSON endpoints (e.g. ML proxy) alongside the MVC pattern |
+| **`uploads/`** | Borrower uploads (e.g. `uploads/applications/{application_id}/`), not edited in MVC docs |
+
+Static images may live beside views or branding assets as the project adds them—there is no single required top-level **`Images/`** folder for code to rely on.
 
 ---
 
-## 4. APPLICATION FLOW (POST LOGIN)
+## 2. Core rules
 
-Documents → Loan amount → Guarantor → MFI → Waiting. Each step POSTs to an action and redirects to the next page.
+- **Controllers:** Request coordination only → call **`Classes`**; no SQL strings, no HTML.
+- **Classes:** All reusable business logic and DB access used by controllers/actions.
+- **Views:** Presentation only—no PDO, no domain rules beyond display formatting.
+- **Actions:** Glue only; borrower actions **prefer** a controller method; heavier admin endpoints may orchestrate Classes in-file.
+- **No SQL in views. No full page HTML templates inside controllers.**
+
+---
+
+## 3. Borrower auth flow
+
+1. **Sign-in (phone):** POST `send_verification_code` → if that phone already exists as a user, redirected to **`login`** with **`existing_member`** (no new code sent); otherwise **`VerificationCode`**, **`pending_phone`**, then sign-in **`step=code`**.
+2. **`verify_code`:** Valid → existing user (`pending_login_user_id`) to **`login`**, **`existing=1`**, or new user → **`login`** with register UI.
+3. **Register:** `register_customer_action` → **`AuthController::register`** → **`User::create`**, session, redirect **`documents`**.
+4. **Login (verified phone path):** `login_customer_action` → **`AuthController::login`** (password checked with **`User::verifyPassword`**), redirect **`home`**.
+5. **Direct login (`login_with_name` / similar):** name + password; same verify path.
+6. **Protected `page`s** (guest → **`signin`**): **`documents`**, **`loan-amount`**, **`guarantor`**, **`mfi`**, **`waiting`**, **`home`**, **`settings`**.
+
+**Roles:** Borrower session uses **`user_id`** and **`role`** (2 = customer, 1 = admin **only if** someone uses borrower session as admin—which is discouraged). Staff use **`Admin/login.php`** and **`admin_user_id`** in session.
+
+---
+
+## 4. Application flow (after borrower login)
+
+**Documents → Loan amount → Guarantor → MFI → Waiting** → **Home** each step POSTs an action (`submit_documents`, `submit_loan_amount`, …) and redirects forward.
+
+Routing, scoring, ML, and schema detail: **[ARCHITECTURE.md](ARCHITECTURE.md)**.

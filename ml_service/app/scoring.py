@@ -1,6 +1,4 @@
-"""
-Option B routing: zero-shot → one-shot → supervised (XGBoost or LR) by n_labeled.
-"""
+"""PD scoring: route by n_labeled (zero / one-shot / supervised)."""
 from __future__ import annotations
 
 import numpy as np
@@ -20,7 +18,7 @@ from app.config import ONE_SHOT_MAX, ZERO_SHOT_MAX
 
 
 def _positive_proba(clf, X: pd.DataFrame) -> float:
-    """Return probability of positive class (index 1) if available, else first proba."""
+    """Positive-class proba when predict_proba exists."""
     if not hasattr(clf, "predict_proba"):
         p = clf.predict(X)
         return float(np.asarray(p).ravel()[0])
@@ -59,7 +57,6 @@ def score_payload(
     columns = load_feature_columns()
     pre = load_preprocessor()
     support_X, support_y = load_support_xy()
-    # Align support columns to expected feature order
     for c in columns:
         if c not in support_X.columns:
             support_X[c] = np.nan
@@ -72,18 +69,31 @@ def score_payload(
         S_t = pre.transform(support_X)
         centroid = np.mean(S_t, axis=0, keepdims=True)
         dist = float(pairwise_distances(X_t, centroid, metric="euclidean")[0, 0])
-        # Softer risk when far from typical support (heuristic placeholder)
         base = float(np.clip(np.mean(support_y.values), 0.0, 1.0))
         pd_score = float(np.clip(base + 0.15 * np.tanh(dist / (np.std(S_t) + 1e-6)), 0.0, 1.0))
         model_used = "zero_shot_proto"
 
     elif mode == "one_shot_proto":
         S_t = pre.transform(support_X)
-        dists = pairwise_distances(X_t, S_t, metric="euclidean").ravel()
-        j = int(np.argmin(dists))
-        y_nn = float(support_y.iloc[j])
-        # Blend with small noise for stability
-        pd_score = float(np.clip(y_nn + 0.02 * rng.standard_normal(), 0.0, 1.0))
+        y_arr = support_y.values.ravel().astype(float)
+
+        idx_pos = np.where(y_arr == 1)[0]
+        idx_neg = np.where(y_arr == 0)[0]
+
+        if len(idx_pos) == 0 or len(idx_neg) == 0:
+            dists = pairwise_distances(X_t, S_t, metric="euclidean").ravel()
+            j = int(np.argmin(dists))
+            pd_score = float(np.clip(y_arr[j] + 0.02 * rng.standard_normal(), 0.0, 1.0))
+        else:
+            centroid_pos = np.mean(S_t[idx_pos], axis=0, keepdims=True)
+            centroid_neg = np.mean(S_t[idx_neg], axis=0, keepdims=True)
+
+            dist_pos = float(pairwise_distances(X_t, centroid_pos, metric="euclidean")[0, 0])
+            dist_neg = float(pairwise_distances(X_t, centroid_neg, metric="euclidean")[0, 0])
+
+            total = dist_pos + dist_neg + 1e-9
+            pd_score = float(np.clip(dist_neg / total, 0.0, 1.0))
+
         model_used = "one_shot_proto"
 
     else:
@@ -124,7 +134,6 @@ def check_artifacts_ready() -> tuple[bool, str]:
     except ArtifactError as e:
         return False, str(e)
     except Exception as e:
-        # e.g. XGBoostError: libomp.dylib missing on macOS after pip install xgboost
         msg = (str(e).strip() or type(e).__name__)
         if "libomp" in msg.lower() or "libxgboost" in msg.lower():
             msg += (

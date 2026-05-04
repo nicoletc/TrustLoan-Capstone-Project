@@ -1,8 +1,5 @@
 <?php
-/**
- * POST JSON → ML /score proxy (Option B). Session: borrower or admin.
- * Request: { "user_id"?: int, "n_labeled"?: int, "preferred_supervised"?: "xgboost"|"lr", "features"?: object }
- */
+/** JSON proxy to ML /score (borrower or admin session); optional overrides in body. */
 require_once __DIR__ . '/../settings/core.php';
 require_once __DIR__ . '/../Classes/Application.php';
 require_once __DIR__ . '/../Classes/MlScoringClient.php';

@@ -1,16 +1,12 @@
 <?php
-/**
- * HTTP client for TrustLoan ML scoring API (Option B). No HTML.
- */
+/** Minimal HTTP POST to ML /score (base URL from settings). */
 if (!defined('TRUSTLOAN_ML_SCORING_CLIENT_LOADED')) {
     define('TRUSTLOAN_ML_SCORING_CLIENT_LOADED', true);
 }
 
 class MlScoringClient {
 
-    /**
-     * Base URL e.g. http://127.0.0.1:8000 (no trailing slash).
-     */
+    /** Trimmed TRUSTLOAN_ML_SCORING_URL or ''. */
     public static function getBaseUrl() {
         if (!defined('TRUSTLOAN_ML_SCORING_URL') || TRUSTLOAN_ML_SCORING_URL === '') {
             return '';
@@ -18,9 +14,7 @@ class MlScoringClient {
         return rtrim((string) TRUSTLOAN_ML_SCORING_URL, '/');
     }
 
-    /**
-     * POST /score. Returns decoded array or null on failure.
-     */
+    /** POST /score → decoded JSON or null. */
     public static function score(array $features, $nLabeled, $preferredSupervised = 'xgboost', $seed = 42) {
         $base = self::getBaseUrl();
         if ($base === '') {

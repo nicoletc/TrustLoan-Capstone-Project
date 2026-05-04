@@ -28,7 +28,7 @@ if (!$app) {
 
 $uid = (int) ($app['user_id'] ?? 0);
 if ($uid > 0) {
-    $display = CreditScore::getForDisplay($uid, true);
+    $display = CreditScore::getForDisplay($uid, true, false);
     $app['credit_score'] = $display['score'];
     $row = CreditScore::getByUserId($uid);
     $app['credit_score_calculated_at'] = $row ? ($row['calculated_at'] ?? null) : null;

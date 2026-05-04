@@ -14,7 +14,7 @@ $calculatedAtFormatted = '';
 
 if ($isLoggedIn && !empty($_SESSION['user_id'])) {
     require_once __DIR__ . '/../Classes/CreditScore.php';
-    $data = CreditScore::getForDisplay((int) $_SESSION['user_id'], false);
+    $data = CreditScore::getForDisplay((int) $_SESSION['user_id'], false, false);
     $creditScore = (int) ($data['score'] ?? 0);
     $scoreLabel = $data['score_label'] ?? 'No score';
     $scoreMax = (int) ($data['score_max'] ?? 100);
@@ -58,7 +58,9 @@ if ($isLoggedIn && !empty($_SESSION['user_id'])) {
                         <span class="creditscore-number" aria-label="Score <?php echo (int) $creditScore; ?> out of <?php echo (int) $scoreMax; ?>"><?php echo (int) $creditScore; ?></span>
                         <span class="creditscore-max">/ <?php echo (int) $scoreMax; ?></span>
                     </div>
+                    <?php if ($scoreLabel !== '' && $scoreLabel !== 'No score'): ?>
                     <p class="creditscore-label"><?php echo htmlspecialchars($scoreLabel); ?></p>
+                    <?php endif; ?>
                 </section>
 
                 <?php if ($borrower !== null): ?>

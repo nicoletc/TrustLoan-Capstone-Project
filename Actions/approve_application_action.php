@@ -1,7 +1,5 @@
 <?php
-/**
- * TrustLoan – Admin: approve application. Assign group (or create), set meeting, create loan + repayments, audit.
- */
+/** Admin JSON: approve app, group/meeting/loan setup, audit. */
 ini_set('display_errors', '0');
 
 require_once __DIR__ . '/../settings/core.php';

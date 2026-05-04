@@ -1,7 +1,5 @@
 <?php
-/**
- * TrustLoan – Entry point. Route POST actions first, then load View by page.
- */
+/** Routes POST actions, then loads View/*.php by ?page=. */
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -14,14 +12,14 @@ $baseUrl = (function () {
     return ($dir === '/' || $dir === '\\') ? '/' : rtrim(str_replace('\\', '/', $dir), '/') . '/';
 })();
 
-// When post_max_size is exceeded, PHP may leave $_POST and $_FILES empty
+// post_max exceeded → empty POST/FILES
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false) {
     $_SESSION['documents_error'] = 'Request too large. Please use smaller images (under 2MB each) and try again.';
     header('Location: ' . $baseUrl . 'index.php?page=documents');
     exit;
 }
 
-// Route POST with action to Actions/*.php first (so verify_code, logout_action, etc. run and redirect)
+// POST + action → Actions/{action}.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && trim($_POST['action']) !== '') {
     $action = preg_replace('/[^a-z0-9_]/', '', strtolower(trim($_POST['action'])));
     $actionFile = __DIR__ . '/Actions/' . $action . '.php';
@@ -39,7 +37,7 @@ if (in_array($page, $protectedPages, true) && !is_logged_in()) {
     exit;
 }
 
-// Shared menu bar: which nav item is active and header actions (Sign in vs Settings + name)
+// Nav active tab + header
 $navActive = 'home';
 if ($page === 'overview') {
     $navActive = 'overview';
@@ -54,7 +52,7 @@ if ($page === 'overview') {
 }
 $isLoggedIn = is_logged_in();
 $fullName = ($isLoggedIn && isset($_SESSION['full_name'])) ? (string) $_SESSION['full_name'] : '';
-// Hide Dashboard link on Home, How it works, and Check credit score
+// Hide Dashboard on marketing / credit-score pages
 $showDashboard = !in_array($page, ['landing', 'overview', 'creditscore'], true);
 
 switch ($page) {
