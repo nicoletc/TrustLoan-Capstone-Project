@@ -7,5 +7,9 @@ ml_service/.venv/
 *.py[cod]
 .pytest_cache/
 
-# New per-application upload folders (keep tracked files as-is; do not commit new IDs)
-uploads/applications/*/
+# User uploads — not committed (borrower IDs, cards, photos). Repo keeps .gitkeep only.
+/uploads/*
+!/uploads/.gitkeep
+!/uploads/applications/
+/uploads/applications/**
+!/uploads/applications/.gitkeep
